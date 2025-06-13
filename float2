@@ -26,13 +26,12 @@ local offsetY = -3
 local baseYOffset = hrp.Position.Y + offsetY
 local moveSpeed = 0.5
 
--- Hàm thông báo trạng thái
-local function notify(text)
-	StarterGui:SetCore("ChatMakeSystemMessage", {
-		Text = "Float Status: " .. text,
-		Color = Color3.new(1, 1, 0.5),
-		Font = Enum.Font.SourceSansBold,
-		FontSize = Enum.FontSize.Size24
+-- Thông báo
+local function notify(msg)
+	StarterGui:SetCore("SendNotification", {
+		Title = "Float Status:",
+		Text = msg,
+		Duration = 3
 	})
 end
 
