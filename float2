@@ -1,0 +1,99 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+-- Tạo sàn vô hình
+local floatPart = Instance.new("Part")
+floatPart.Size = Vector3.new(50, 1, 50)
+floatPart.Anchored = true
+floatPart.CanCollide = true
+floatPart.Transparency = 1
+floatPart.Name = "AirFloor"
+floatPart.Parent = workspace
+floatPart.Position = hrp.Position - Vector3.new(0, 3, 0)
+
+-- Biến điều khiển
+local enabled = false
+local lower = false
+local raise = false
+local offsetY = -3
+local baseYOffset = hrp.Position.Y + offsetY
+local moveSpeed = 0.5
+
+-- Hàm thông báo trạng thái
+local function notify(text)
+	StarterGui:SetCore("ChatMakeSystemMessage", {
+		Text = "Float Status: " .. text,
+		Color = Color3.new(1, 1, 0.5),
+		Font = Enum.Font.SourceSansBold,
+		FontSize = Enum.FontSize.Size24
+	})
+end
+
+-- Gõ lệnh bật/tắt
+player.Chatted:Connect(function(msg)
+	if msg == "/float" then
+		enabled = true
+		baseYOffset = hrp.Position.Y + offsetY
+		notify("Float Turned On ✅")
+	elseif msg == "/unfloat" then
+		enabled = false
+		notify("Float Turned Off ❌")
+	end
+end)
+
+-- Bắt phím Q, E
+UIS.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.Q then
+		lower = true
+	elseif input.KeyCode == Enum.KeyCode.E then
+		raise = true
+	end
+end)
+
+UIS.InputEnded:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.Q then
+		lower = false
+	elseif input.KeyCode == Enum.KeyCode.E then
+		raise = false
+	end
+end)
+
+-- Hiệu ứng float
+RunService.RenderStepped:Connect(function()
+	if not enabled then
+		floatPart.Position = Vector3.new(0, -5000, 0) -- giấu sàn
+		return
+	end
+
+	if character and hrp and humanoid then
+		local currentY = hrp.Position.Y + offsetY
+
+		-- Khi nhảy lên, cập nhật sàn theo
+		if currentY > baseYOffset + 2 then
+			baseYOffset = currentY
+		end
+
+		-- Điều khiển nâng/hạ
+		if lower then
+			baseYOffset -= moveSpeed
+		elseif raise then
+			baseYOffset += moveSpeed
+		end
+
+		-- Chống rơi nhanh
+		if hrp.Velocity.Y < -5 then
+			baseYOffset = hrp.Position.Y + offsetY
+		end
+
+		-- Cập nhật vị trí sàn
+		floatPart.Position = Vector3.new(hrp.Position.X, baseYOffset, hrp.Position.Z)
+	end
+end)
